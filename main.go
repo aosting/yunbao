@@ -1,4 +1,4 @@
-package yunbao
+package main
 
 import (
 	"github.com/aliyun/aliyun-log-go-sdk"
@@ -9,7 +9,7 @@ import (
 	"sync/atomic"
 	"time"
 	"runtime/debug"
-	"yunbao/yblogs"
+	"github.com/aosting/yunbao/yblogs"
 )
 
 var counter int64 = 0

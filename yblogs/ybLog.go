@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	RELEASE = true
+	RELEASE = false
 )
 
 func INFO(v ...interface{}) {
