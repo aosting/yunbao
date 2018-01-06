@@ -8,6 +8,10 @@ var (
 	RELEASE = true
 )
 
+func SetRelease(isRelease bool) {
+	RELEASE = isRelease
+}
+
 func INFO(v ...interface{}) {
 	if !RELEASE {
 		log.Println("INFO", v)
@@ -22,6 +26,10 @@ func DEBUG(v ...interface{}) {
 
 func WARN(v ...interface{}) {
 	log.Println("WARN", v)
+}
+
+func ERROR(v ...interface{}) {
+	log.Println("ERROR", v)
 }
 
 func SUCC(v ...interface{}) {
