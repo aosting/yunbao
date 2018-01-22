@@ -4,6 +4,9 @@ import (
 	"log"
 	"time"
 	"strconv"
+	"github.com/twinj/uuid"
+	"crypto/md5"
+	"encoding/hex"
 )
 
 var (
@@ -15,10 +18,10 @@ const (
 
 	PLATFORM_NEWLAND = "newland"
 
-	PLATFORM_ADX_GDT = "adx-gdt"
-	PLATFORM_ADX_PP  = "adx-pp"
-	PLATFORM_ADX_KS  = "adx-ks"
-	PLATFORM_ADX_yyb = "adx-yyb"
+	PLATFORM_ADX_GDT  = "adx-gdt"
+	PLATFORM_ADX_PP   = "adx-pp"
+	PLATFORM_ADX_KS   = "adx-ks"
+	PLATFORM_ADX_yyb  = "adx-yyb"
 	PLATFORM_APK_LIST = "nw-apk-list"
 
 	WORKLOG_STORE_NAME = "nw-sys-module-log"
@@ -70,6 +73,9 @@ func WORKLOG2(platform string, requestId string, slotId string, responseCode str
 		result = "WORKSUCC"
 	}
 
+	if isBlank(requestId) {
+		requestId = Md5(uuid.NewV1().String())
+	}
 	tmp := make(map[string]string)
 	tmp["request_timestamp"] = time.Now().Format("20060102150405")
 	tmp["hour"] = time.Now().Format("15")
@@ -88,5 +94,14 @@ func WORKLOG2(platform string, requestId string, slotId string, responseCode str
 	if error != nil {
 		WARN(error)
 	}
+}
 
+func Md5(b string) (tp string) {
+	h := md5.New()
+	h.Write([]byte(b))
+	x := h.Sum(nil)
+	y := make([]byte, 32)
+	hex.Encode(y, x)
+
+	return string(y)
 }
