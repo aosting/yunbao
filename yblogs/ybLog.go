@@ -14,15 +14,16 @@ var (
 )
 
 const (
-	PLATFORM_SSP = "ssp-proxy"
+	PLATFORM_SSP = "ssp"
+	PLATFORM_NW  = "nw"
 
-	PLATFORM_NEWLAND = "newland"
+	DOCKANME_NEWLAND = "newland"
 
-	PLATFORM_ADX_GDT  = "adx-gdt"
-	PLATFORM_ADX_PP   = "adx-pp"
-	PLATFORM_ADX_KS   = "adx-ks"
-	PLATFORM_ADX_yyb  = "adx-yyb"
-	PLATFORM_APK_LIST = "nw-apk-list"
+	DOCKANME_ADX_GDT  = "adx-gdt"
+	DOCKANME_ADX_PP   = "adx-pp"
+	DOCKANME_ADX_KS   = "adx-ks"
+	DOCKANME_ADX_yyb  = "adx-yyb"
+	DOCKANME_APK_LIST = "nw-apk-list"
 
 	WORKLOG_STORE_NAME = "nw-sys-module-log"
 )
@@ -67,7 +68,7 @@ func WORKLOG(businessName string, requestId string, ms int, responseCode string,
 	log.Println(businessName, requestId, ms, responseCode, result, v)
 }
 
-func WORKLOG2(platform string, requestId string, slotId string, responseCode string, ms int, Succ bool, msg string) {
+func WORKLOG2(platform string, dockername string, requestId string, slotId string, responseCode string, ms int, Succ bool, msg string) {
 	result := "WORKFAIL"
 	if Succ {
 		result = "WORKSUCC"
@@ -80,6 +81,7 @@ func WORKLOG2(platform string, requestId string, slotId string, responseCode str
 	tmp["request_timestamp"] = time.Now().Format("20060102150405")
 	tmp["hour"] = time.Now().Format("15")
 	tmp["platform"] = platform
+	tmp["dockername"] = dockername
 	tmp["requestId"] = requestId
 	tmp["slotId"] = slotId
 	tmp["responseCode"] = responseCode
@@ -96,7 +98,7 @@ func WORKLOG2(platform string, requestId string, slotId string, responseCode str
 	}
 }
 
-func WORKLOG3(platform string, requestId string, slotId string, responseCode string, ms int, Succ bool, msg string, values []string) {
+func WORKLOG3(platform string, dockername string, requestId string, slotId string, responseCode string, ms int, Succ bool, msg string, values []string) {
 	result := "WORKFAIL"
 	if Succ {
 		result = "WORKSUCC"
@@ -109,6 +111,7 @@ func WORKLOG3(platform string, requestId string, slotId string, responseCode str
 	tmp["request_timestamp"] = time.Now().Format("20060102150405")
 	tmp["hour"] = time.Now().Format("15")
 	tmp["platform"] = platform
+	tmp["dockername"] = dockername
 	tmp["requestId"] = requestId
 	tmp["slotId"] = slotId
 	tmp["responseCode"] = responseCode
