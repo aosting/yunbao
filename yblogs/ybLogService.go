@@ -63,6 +63,7 @@ func Init(storeMap map[string]StoreMap, names []string) {
 		logMapstore = storeMap
 		storeNames = names
 		initbool = true
+		DEBUG("ybLogService  init succ")
 		task()
 	}
 }
