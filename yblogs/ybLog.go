@@ -17,13 +17,13 @@ const (
 	PLATFORM_SSP = "ssp"
 	PLATFORM_NW  = "nw"
 
-	DOCKANME_NEWLAND = "newland"
+	DOCKERNAME_NEWLAND = "newland"
 
-	DOCKANME_ADX_GDT  = "adx-gdt"
-	DOCKANME_ADX_PP   = "adx-pp"
-	DOCKANME_ADX_KS   = "adx-ks"
-	DOCKANME_ADX_yyb  = "adx-yyb"
-	DOCKANME_APK_LIST = "nw-apk-list"
+	DOCKERNAME_ADX_GDT  = "adx-gdt"
+	DOCKERNAME_ADX_PP   = "adx-pp"
+	DOCKERNAME_ADX_KS   = "adx-ks"
+	DOCKERNAME_ADX_yyb  = "adx-yyb"
+	DOCKERNAME_APK_LIST = "nw-apk-list"
 
 	WORKLOG_STORE_NAME = "nw-sys-module-log"
 )
