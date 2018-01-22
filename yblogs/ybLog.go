@@ -96,6 +96,38 @@ func WORKLOG2(platform string, requestId string, slotId string, responseCode str
 	}
 }
 
+func WORKLOG3(platform string, requestId string, slotId string, responseCode string, ms int, Succ bool, msg string, values []string) {
+	result := "WORKFAIL"
+	if Succ {
+		result = "WORKSUCC"
+	}
+
+	if isBlank(requestId) {
+		requestId = Md5(uuid.NewV1().String())
+	}
+	tmp := make(map[string]string)
+	tmp["request_timestamp"] = time.Now().Format("20060102150405")
+	tmp["hour"] = time.Now().Format("15")
+	tmp["platform"] = platform
+	tmp["requestId"] = requestId
+	tmp["slotId"] = slotId
+	tmp["responseCode"] = responseCode
+	tmp["ms"] = strconv.Itoa(ms)
+	tmp["result"] = result
+	tmp["msg"] = msg
+
+	for _, i := range values {
+		tmp[i] = i
+	}
+	outLog := OutLogMap{
+		LogMap: tmp,
+	}
+	error := PushLogQueue(WORKLOG_STORE_NAME, outLog)
+	if error != nil {
+		WARN(error)
+	}
+}
+
 func Md5(b string) (tp string) {
 	h := md5.New()
 	h.Write([]byte(b))
