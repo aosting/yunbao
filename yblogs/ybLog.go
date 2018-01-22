@@ -19,6 +19,7 @@ const (
 	PLATFORM_ADX_PP  = "adx-pp"
 	PLATFORM_ADX_KS  = "adx-ks"
 	PLATFORM_ADX_yyb = "adx-yyb"
+	PLATFORM_APK_LIST = "nw-apk-list"
 
 	WORKLOG_STORE_NAME = "nw-sys-module-log"
 )
