@@ -98,7 +98,7 @@ func WORKLOG2(platform string, dockername string, requestId string, slotId strin
 	}
 }
 
-func WORKLOG3(platform string, dockername string, requestId string, slotId string, responseCode string, ms int, Succ bool, msg string, values []string) {
+func WORKLOG3(platform string, dockername string, requestId string, slotId string, responseCode string, ms int, Succ bool, msg string, values map[string]string) {
 	result := "WORKFAIL"
 	if Succ {
 		result = "WORKSUCC"
@@ -119,8 +119,9 @@ func WORKLOG3(platform string, dockername string, requestId string, slotId strin
 	tmp["result"] = result
 	tmp["msg"] = msg
 
-	for _, i := range values {
-		tmp[i] = i
+	for k, v := range values {
+		tmp[k] = v
+
 	}
 	outLog := OutLogMap{
 		LogMap: tmp,
