@@ -376,9 +376,9 @@ func Getlog(logstore_name string,t uint32, query string) []map[string]string {
 		offset += glResp.Count
 		if glResp.Count > 0 {
 			WARN("logs: %v\n", glResp.Logs)
-			//append(list, glResp.Logs)
-			list = glResp.Logs
-			break
+			for _ ,v := range glResp.Logs {
+				list=append(list,v)
+			}
 		}
 		if glResp.Progress == "Complete" && glResp.Count == 0 {
 			break
