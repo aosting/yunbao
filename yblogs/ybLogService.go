@@ -472,3 +472,89 @@ func Getlogbyday(logstore_name string,day int64, query string) []map[string]stri
 	}
 	return list
 }
+
+
+
+func Getlogbyday(logstore_name string,day int64, query string) []map[string]string {
+	// pull logs from logstore
+
+	t := time.Now()
+	tm1 := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
+	today:=tm1.Unix()
+
+
+	begin_time := today-day*3600*24
+	end_time := today-(day-1)*3600*24
+
+	project := logMapstore[logstore_name].Project
+	var retry_times int
+
+	var logstore *sls.LogStore
+
+	var err error
+	list := make([]map[string]string, 0)
+	for retry_times = 0; ; retry_times++ {
+		if retry_times > 5 {
+			return list
+		}
+		logstore, err = project.GetLogStore(logstore_name)
+		if err != nil {
+			WARN("GetLogStore fail, retry:%d, err:%v\n", retry_times, err)
+			if strings.Contains(err.Error(), sls.PROJECT_NOT_EXIST) {
+				return list
+			} else if strings.Contains(err.Error(), sls.LOGSTORE_NOT_EXIST) {
+				err = project.CreateLogStore(logstore_name, 1, 2)
+				if err != nil {
+					WARN("CreateLogStore fail, err: ", err.Error())
+				} else {
+					WARN("CreateLogStore success")
+				}
+			}
+		} else {
+			WARN("GetLogStore success, retry:%d, name: %s, ttl: %d, shardCount: %d, createTime: %d, lastModifyTime: %d\n", retry_times, logstore.Name, logstore.TTL, logstore.ShardCount, logstore.CreateTime, logstore.LastModifyTime)
+			break
+		}
+		time.Sleep(200 * time.Millisecond)
+	}
+
+	// search logs from index on logstore
+	totalCount := int64(0)
+	for {
+		// GetHistograms API Ref: https://intl.aliyun.com/help/doc-detail/29030.htm
+		ghResp, err := logstore.GetHistograms("", int64(begin_time), int64(end_time), query)
+		if err != nil {
+			WARN("GetHistograms fail, err: %v\n", err)
+			time.Sleep(10 * time.Millisecond)
+			continue
+		}
+		//fmt.Printf("complete: %s, count: %d, histograms: %v\n", ghResp.Progress, ghResp.Count, ghResp.Histograms)
+		totalCount += ghResp.Count
+		if ghResp.Progress == "Complete" {
+			break
+		}
+	}
+	offset := int64(0)
+	// get logs repeatedly with (offset, lines) parameters to get complete result
+
+	for offset < totalCount {
+		// GetLogs API Ref: https://intl.aliyun.com/help/doc-detail/29029.htm
+		glResp, err := logstore.GetLogs("", int64(begin_time), int64(end_time), query, 1000, offset, false)
+		if err != nil {
+			WARN("GetLogs fail, err: %v\n", err)
+			time.Sleep(10 * time.Millisecond)
+			continue
+		}
+		WARN("Progress:%s, Count:%d, offset: %d\n", glResp.Progress, glResp.Count, offset)
+		offset += glResp.Count
+		if glResp.Count > 0 {
+			WARN("logs: %v\n", glResp.Logs)
+			for _ ,v := range glResp.Logs {
+				list=append(list,v)
+			}
+		}
+		if glResp.Progress == "Complete" && glResp.Count == 0 {
+			break
+		}
+	}
+	return list
+}
