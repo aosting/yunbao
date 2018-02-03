@@ -49,7 +49,6 @@ func task() {
 			}
 			if out != nil && len(out) > 0 {
 				project := logMapstore[logStorename].Project
-				DEBUG("5秒日志未输出", out)
 				go Writelog(&project, logStorename, out)
 			}
 		}
