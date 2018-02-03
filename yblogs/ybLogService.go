@@ -49,7 +49,7 @@ func task() {
 			}
 			if out != nil && len(out) > 0 {
 				project := logMapstore[logStorename].Project
-				
+				DEBUG("5秒日志未输出", out)
 				go Writelog(&project, logStorename, out)
 			}
 		}
@@ -376,7 +376,7 @@ func Getlog(logstore_name string,t uint32, query string) []map[string]string {
 		WARN("Progress:%s, Count:%d, offset: %d\n", glResp.Progress, glResp.Count, offset)
 		offset += glResp.Count
 		if glResp.Count > 0 {
-			WARN("logs: %v\n", glResp.Logs)
+			//WARN("logs: %v\n", glResp.Logs)
 			for _ ,v := range glResp.Logs { 
 				list=append(list,v)
 			}
@@ -461,7 +461,7 @@ func Getlogbyday(logstore_name string,day int64, query string) []map[string]stri
 		WARN("Progress:%s, Count:%d, offset: %d\n", glResp.Progress, glResp.Count, offset)
 		offset += glResp.Count
 		if glResp.Count > 0 {
-			WARN("logs: %v\n", glResp.Logs)
+			//WARN("logs: %v\n", glResp.Logs)
 			for _ ,v := range glResp.Logs {
 				list=append(list,v)
 			}
