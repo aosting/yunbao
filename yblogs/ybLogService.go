@@ -420,11 +420,9 @@ func Getlogbyday(logstore_name string,day int64, query string) []map[string]stri
 				if err != nil {
 					WARN("CreateLogStore fail, err: ", err.Error())
 				} else {
-					WARN("CreateLogStore success")
 				}
 			}
 		} else {
-			WARN("GetLogStore success, retry:%d, name: %s, ttl: %d, shardCount: %d, createTime: %d, lastModifyTime: %d\n", retry_times, logstore.Name, logstore.TTL, logstore.ShardCount, logstore.CreateTime, logstore.LastModifyTime)
 			break
 		}
 		time.Sleep(200 * time.Millisecond)
@@ -457,10 +455,8 @@ func Getlogbyday(logstore_name string,day int64, query string) []map[string]stri
 			time.Sleep(10 * time.Millisecond)
 			continue
 		}
-		WARN("Progress:%s, Count:%d, offset: %d\n", glResp.Progress, glResp.Count, offset)
 		offset += glResp.Count
 		if glResp.Count > 0 {
-			//WARN("logs: %v\n", glResp.Logs)
 			for _ ,v := range glResp.Logs {
 				list=append(list,v)
 			}
