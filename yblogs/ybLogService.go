@@ -392,12 +392,14 @@ func Getlogbyday(logstore_name string,day int64, query string) []map[string]stri
 	// pull logs from logstore
 
 	t := time.Now()  
-	tm1 := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())  
-	today:=tm1.Unix()
+	//tm1 := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
+	//today:=tm1.Unix()
 
-	
-	begin_time := today-day*3600*24
-	end_time := today-(day-1)*3600*24
+	//begin_time := today-day*3600*24 day * (3600*24)
+	//end_time := today-(day-1)*3600*24
+	//更改为当前时间向前推24小时为单位. 
+	begin_time := t.Unix() - (day * 86400)
+	end_time := t.Unix()
 
 	project := logMapstore[logstore_name].Project
 	var retry_times int
