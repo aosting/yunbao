@@ -2,13 +2,17 @@ package yblogs
 
 import (
 	"time"
-	"os"
 	"github.com/aliyun/aliyun-log-go-sdk"
 	"strings"
 	"github.com/gogo/protobuf/proto"
 	"errors"
 	"sync"
 	"github.com/robfig/cron"
+	"os"
+)
+
+const (
+	PUSH_TRY_NUMS = 10
 )
 
 //日志缓存数组
@@ -38,8 +42,8 @@ var initbool = false
 func task() {
 	DEBUG("定时任务启动...............")
 	c := cron.New()
-	//2s跑一次
-	spec4 := "*/5 * * * * *"
+	//10s跑一次
+	spec4 := "*/10 * * * * *"
 	c.AddFunc(spec4, func() {
 		for index, _ := range storeNames {
 			logStorename := storeNames[index]
@@ -96,12 +100,12 @@ func PushLogQueue(logStorename string, outlog OutLogMap) (err error) {
 		return errors.New(errorMsg)
 	}
 	for key := range outlog.LogMap {
-		if !isBlank(outlog.LogMap[key]) {
-			content = append(content, &sls.LogContent{
-				Key:   proto.String(key),
-				Value: proto.String(outlog.LogMap[key]),
-			})
-		}
+		//if !isBlank(outlog.LogMap[key]) {
+		content = append(content, &sls.LogContent{
+			Key:   proto.String(key),
+			Value: proto.String(outlog.LogMap[key]),
+		})
+		//}
 	}
 	log := &sls.Log{
 		Time:     proto.Uint32(uint32(time.Now().Unix())),
@@ -159,8 +163,9 @@ func Writelog(project *sls.LogProject, logstore_name string, logs []*sls.Log) {
 		Source: proto.String(host),
 		Logs:   logs,
 	}
+
 	// PostLogStoreLogs API Ref: https://intl.aliyun.com/help/doc-detail/29026.htm
-	for retry_times = 0; retry_times < 10; retry_times++ {
+	for retry_times = 0; retry_times < PUSH_TRY_NUMS; retry_times++ {
 		err := logstore.PutLogs(loggroup)
 		if err == nil {
 			INFO("PutLogs success, retry: %d\n", retry_times)
@@ -174,7 +179,23 @@ func Writelog(project *sls.LogProject, logstore_name string, logs []*sls.Log) {
 			} else if strings.Contains(err.Error(), sls.INTERNAL_SERVER_ERROR) || strings.Contains(err.Error(), sls.SERVER_BUSY) {
 				time.Sleep(200 * time.Millisecond)
 			}
+			if retry_times == (PUSH_TRY_NUMS - 1) {
+				DEBUG("PutLogs back ,nums is", len(logs))
+				adds(logstore_name, logs)
+			}
 		}
+	}
+}
+
+func adds(logStorename string, logs []*sls.Log) (log_put_size int, err error) {
+	if storeMap, ok := logMapstore[logStorename]; ok {
+		storeMap.LogArray.appends(logs)
+		num := storeMap.LogArray.size()
+		logMapstore[logStorename] = storeMap
+		return num, nil
+	} else {
+
+		return -1, errors.New("not have " + logStorename)
 	}
 }
 
@@ -228,6 +249,16 @@ func isBlank(str string) bool {
 		return true
 	}
 	return false
+}
+
+func (cs *ArrayList) appends(puts []*sls.Log) {
+	cs.Lock()
+	defer cs.Unlock()
+	if cs == nil {
+		cs = &ArrayList{}
+		cs.put = make([]*sls.Log, 0)
+	}
+	cs.put = append(cs.put, puts...)
 }
 
 // Appends an item to the concurrent slice
@@ -306,10 +337,7 @@ func (cs *ArrayList) getAll() []*sls.Log {
 	return tmp
 }
 
-
-
-
-func Getlog(logstore_name string,t uint32, query string) []map[string]string {
+func Getlog(logstore_name string, t uint32, query string) []map[string]string {
 	// pull logs from logstore
 	project := logMapstore[logstore_name].Project
 	begin_time := uint32(time.Now().Unix())
@@ -376,8 +404,8 @@ func Getlog(logstore_name string,t uint32, query string) []map[string]string {
 		offset += glResp.Count
 		if glResp.Count > 0 {
 			//WARN("logs: %v\n", glResp.Logs)
-			for _ ,v := range glResp.Logs { 
-				list=append(list,v)
+			for _, v := range glResp.Logs {
+				list = append(list, v)
 			}
 		}
 		if glResp.Progress == "Complete" && glResp.Count == 0 {
@@ -387,11 +415,10 @@ func Getlog(logstore_name string,t uint32, query string) []map[string]string {
 	return list
 }
 
-
-func Getlogbyday(logstore_name string,day int64, query string) []map[string]string {
+func Getlogbyday(logstore_name string, day int64, query string) []map[string]string {
 	// pull logs from logstore
 
-	t := time.Now()  
+	t := time.Now()
 	//tm1 := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
 	//today:=tm1.Unix()
 
@@ -459,8 +486,8 @@ func Getlogbyday(logstore_name string,day int64, query string) []map[string]stri
 		}
 		offset += glResp.Count
 		if glResp.Count > 0 {
-			for _ ,v := range glResp.Logs {
-				list=append(list,v)
+			for _, v := range glResp.Logs {
+				list = append(list, v)
 			}
 		}
 		if glResp.Progress == "Complete" && glResp.Count == 0 {
@@ -469,4 +496,3 @@ func Getlogbyday(logstore_name string,day int64, query string) []map[string]stri
 	}
 	return list
 }
-
