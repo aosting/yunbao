@@ -17,11 +17,13 @@ type MutexMap struct {
 }
 
 func (mmap *MutexMap) getRealMap() map[string]StoreMap {
+	mmap.RLock()
+	defer mmap.RUnlock()
 	return mmap.realMap
 }
 
 func (mmap *MutexMap) setRealMap(key string, storeMap StoreMap) {
-	mmap.RLock()
+	mmap.Lock()
 	mmap.realMap[key] = storeMap
-	mmap.RUnlock()
+	mmap.Unlock()
 }
