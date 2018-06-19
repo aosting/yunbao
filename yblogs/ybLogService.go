@@ -29,7 +29,8 @@ type OutLogMap struct {
 var addMute sync.Mutex
 var removeMute sync.Mutex
 var logMapstore = MutexMap{
-	RealMap: make(map[string]StoreMap),
+	RealMap:   make(map[string]StoreMap),
+	Configmap: make(map[string]ConfigMap),
 }
 
 var storeNames = make([]string, 0)
@@ -50,7 +51,7 @@ func task() {
 			}
 			if out != nil && len(out) > 0 {
 				logMapstore.Mu.RLock()
-				project := logMapstore.RealMap[logStorename].Project
+				project := logMapstore.Configmap[logStorename].Project
 				logMapstore.Mu.RUnlock()
 				go Writelog(&project, logStorename, out)
 			}
@@ -63,8 +64,12 @@ func task() {
 //初始化配置
 func Init(storeMap map[string]StoreMap, names []string) {
 	if !initbool {
-		logMapstore = MutexMap{
-			RealMap: storeMap,
+		logMapstore.RealMap = storeMap
+		for k, v := range storeMap {
+			logMapstore.Configmap[k] = ConfigMap{
+				Project: v.Project,
+				OutSize: v.OutSize,
+			}
 		}
 		storeNames = names
 		initbool = true
@@ -82,8 +87,8 @@ func PushLogQueue(logStorename string, outlog OutLogMap) (err error) {
 	defer func() {
 		addMute.Unlock()
 		logMapstore.Mu.RLock()
-		tmpnum := logMapstore.RealMap[logStorename].OutSize
-		tmplog := logMapstore.RealMap[logStorename].Project
+		tmpnum := logMapstore.Configmap[logStorename].OutSize
+		tmplog := logMapstore.Configmap[logStorename].Project
 		logMapstore.Mu.RUnlock()
 
 		if num > tmpnum {
@@ -359,7 +364,7 @@ func (cs *ArrayList) getAll() []*sls.Log {
 func Getlog(logstore_name string, t uint32, query string) []map[string]string {
 	// pull logs from logstore
 	logMapstore.Mu.RLock()
-	project := logMapstore.RealMap[logstore_name].Project
+	project := logMapstore.Configmap[logstore_name].Project
 	logMapstore.Mu.RUnlock()
 	begin_time := uint32(time.Now().Unix())
 	begin_time = begin_time - t
@@ -449,7 +454,7 @@ func Getlogbyday(logstore_name string, day int64, query string) []map[string]str
 	begin_time := t.Unix() - (day * 86400)
 	end_time := t.Unix()
 	logMapstore.Mu.RLock()
-	project := logMapstore.RealMap[logstore_name].Project
+	project := logMapstore.Configmap[logstore_name].Project
 	logMapstore.Mu.RUnlock()
 	var retry_times int
 
