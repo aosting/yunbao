@@ -12,18 +12,17 @@ type StoreMap struct {
 }
 
 type MutexMap struct {
-	sync.RWMutex
-	realMap map[string]StoreMap
+	Mu      sync.RWMutex
+	RealMap map[string]StoreMap
 }
 
 func (mmap *MutexMap) getRealMap() map[string]StoreMap {
-	mmap.RLock()
-	defer mmap.RUnlock()
-	return mmap.realMap
+	return mmap.RealMap
 }
 
 func (mmap *MutexMap) setRealMap(key string, storeMap StoreMap) {
-	mmap.Lock()
-	mmap.realMap[key] = storeMap
-	mmap.Unlock()
+	mmap.Mu.Lock()
+	mmap.RealMap[key] = storeMap
+	mmap.Mu.Unlock()
 }
+

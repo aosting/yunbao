@@ -26,12 +26,10 @@ type OutLogMap struct {
 	LogMap map[string]string
 }
 
-
-
 var addMute sync.Mutex
 var removeMute sync.Mutex
 var logMapstore = MutexMap{
-	realMap: make(map[string]StoreMap),
+	RealMap: make(map[string]StoreMap),
 }
 
 var storeNames = make([]string, 0)
@@ -51,7 +49,9 @@ func task() {
 				continue
 			}
 			if out != nil && len(out) > 0 {
-				project := logMapstore.getRealMap()[logStorename].Project
+				logMapstore.Mu.RLock()
+				project := logMapstore.RealMap[logStorename].Project
+				logMapstore.Mu.RUnlock()
 				go Writelog(&project, logStorename, out)
 			}
 		}
@@ -64,7 +64,7 @@ func task() {
 func Init(storeMap map[string]StoreMap, names []string) {
 	if !initbool {
 		logMapstore = MutexMap{
-			realMap: storeMap,
+			RealMap: storeMap,
 		}
 		storeNames = names
 		initbool = true
@@ -81,11 +81,16 @@ func PushLogQueue(logStorename string, outlog OutLogMap) (err error) {
 	num := 0
 	defer func() {
 		addMute.Unlock()
-		if num > logMapstore.getRealMap()[logStorename].OutSize {
+		logMapstore.Mu.RLock()
+		tmpnum := logMapstore.RealMap[logStorename].OutSize
+		tmplog := logMapstore.RealMap[logStorename].Project
+		logMapstore.Mu.RUnlock()
+
+		if num > tmpnum {
 			//从缓存抛出日志
-			tmp, error := PopLogQueue(logStorename, logMapstore.getRealMap()[logStorename].OutSize)
+			tmp, error := PopLogQueue(logStorename, tmpnum)
 			if error == nil {
-				project := logMapstore.getRealMap()[logStorename].Project
+				project := tmplog
 				//日志组写入日志服务
 				go Writelog(&project, logStorename, tmp)
 			}
@@ -189,57 +194,69 @@ func Writelog(project *sls.LogProject, logstore_name string, logs []*sls.Log) {
 }
 
 func adds(logStorename string, logs []*sls.Log) (log_put_size int, err error) {
-	if storeMap, ok := logMapstore.getRealMap()[logStorename]; ok {
+
+	logMapstore.Mu.RLock()
+	if storeMap, ok := logMapstore.RealMap[logStorename]; ok {
+		logMapstore.Mu.RUnlock()
 		storeMap.LogArray.appends(logs)
 		num := storeMap.LogArray.size()
-		logMapstore.setRealMap(logStorename,storeMap)
+		logMapstore.setRealMap(logStorename, storeMap)
 		return num, nil
 	} else {
-
+		logMapstore.Mu.RUnlock()
 		return -1, errors.New("not have " + logStorename)
 	}
+
 }
 
 func add(logStorename string, slslog *sls.Log) (log_put_size int, err error) {
 
-	if storeMap, ok := logMapstore.getRealMap()[logStorename]; ok {
+	logMapstore.Mu.RLock()
+	if storeMap, ok := logMapstore.RealMap[logStorename]; ok {
+		logMapstore.Mu.RUnlock()
 		storeMap.LogArray.append(slslog)
 		num := storeMap.LogArray.size()
 		INFO("numis ", num, slslog)
-		logMapstore.setRealMap(logStorename,storeMap)
+		logMapstore.setRealMap(logStorename, storeMap)
 		return num, nil
 	} else {
-
+		logMapstore.Mu.RUnlock()
 		return -1, errors.New("not have " + logStorename)
 	}
 }
 
 func remove(logStorename string, size int) ([]*sls.Log, error) {
+	logMapstore.Mu.RLock()
 
-	if storeMap, ok := logMapstore.getRealMap()[logStorename]; ok {
+	if storeMap, ok := logMapstore.RealMap[logStorename]; ok {
+		logMapstore.Mu.RUnlock()
 		putsize := storeMap.LogArray.size()
 		if putsize >= size {
 			out := storeMap.LogArray.getSizeBefore(size)
-			logMapstore.setRealMap(logStorename,storeMap)
+			logMapstore.setRealMap(logStorename, storeMap)
 			return out, nil
 		} else {
 			out := storeMap.LogArray.getAll()
 
-			logMapstore.setRealMap(logStorename,storeMap)
+			logMapstore.setRealMap(logStorename, storeMap)
 			return out, nil
 		}
 	} else {
+		logMapstore.Mu.RUnlock()
 		return nil, errors.New("not have " + logStorename)
 	}
 
 }
 
 func removeALL(logStorename string) ([]*sls.Log, error) {
-	if storeMap, ok := logMapstore.getRealMap()[logStorename]; ok {
+	logMapstore.Mu.RLock()
+	if storeMap, ok := logMapstore.RealMap[logStorename]; ok {
+		logMapstore.Mu.RUnlock()
 		a := storeMap.LogArray.getAll()
-		logMapstore.setRealMap(logStorename,storeMap)
+		logMapstore.setRealMap(logStorename, storeMap)
 		return a, nil
 	} else {
+		logMapstore.Mu.RUnlock()
 		return nil, errors.New("not have " + logStorename)
 	}
 }
@@ -341,7 +358,9 @@ func (cs *ArrayList) getAll() []*sls.Log {
 
 func Getlog(logstore_name string, t uint32, query string) []map[string]string {
 	// pull logs from logstore
-	project := logMapstore.getRealMap()[logstore_name].Project
+	logMapstore.Mu.RLock()
+	project := logMapstore.RealMap[logstore_name].Project
+	logMapstore.Mu.RUnlock()
 	begin_time := uint32(time.Now().Unix())
 	begin_time = begin_time - t
 	end_time := uint32(time.Now().Unix())
@@ -429,8 +448,9 @@ func Getlogbyday(logstore_name string, day int64, query string) []map[string]str
 	//更改为当前时间向前推24小时为单位. 
 	begin_time := t.Unix() - (day * 86400)
 	end_time := t.Unix()
-
-	project := logMapstore.getRealMap()[logstore_name].Project
+	logMapstore.Mu.RLock()
+	project := logMapstore.RealMap[logstore_name].Project
+	logMapstore.Mu.RUnlock()
 	var retry_times int
 
 	var logstore *sls.LogStore
