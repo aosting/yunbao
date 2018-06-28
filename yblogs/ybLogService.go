@@ -158,7 +158,7 @@ func Writelog(project *sls.LogProject, logstore_name string, logs []*sls.Log) {
 				}
 			}
 		} else {
-			INFO("GetLogStore success, retry:%d, name: %s, ttl: %d, shardCount: %d, createTime: %d, lastModifyTime: %d\n", retry_times, logstore.Name, logstore.TTL, logstore.ShardCount, logstore.CreateTime, logstore.LastModifyTime)
+			//INFO("GetLogStore success, retry:%d, name: %s, ttl: %d, shardCount: %d, createTime: %d, lastModifyTime: %d\n", retry_times, logstore.Name, logstore.TTL, logstore.ShardCount, logstore.CreateTime, logstore.LastModifyTime)
 			break
 		}
 		time.Sleep(200 * time.Millisecond)
@@ -388,7 +388,7 @@ func Getlog(logstore_name string, t uint32, query string) []map[string]string {
 				}
 			}
 		} else {
-			WARN("GetLogStore success, retry:%d, name: %s, ttl: %d, shardCount: %d, createTime: %d, lastModifyTime: %d\n", retry_times, logstore.Name, logstore.TTL, logstore.ShardCount, logstore.CreateTime, logstore.LastModifyTime)
+			//WARN("GetLogStore success, retry:%d, name: %s, ttl: %d, shardCount: %d, createTime: %d, lastModifyTime: %d\n", retry_times, logstore.Name, logstore.TTL, logstore.ShardCount, logstore.CreateTime, logstore.LastModifyTime)
 			break
 		}
 		time.Sleep(200 * time.Millisecond)
