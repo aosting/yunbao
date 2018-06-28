@@ -421,7 +421,7 @@ func Getlog(logstore_name string, t uint32, query string) []map[string]string {
 			time.Sleep(10 * time.Millisecond)
 			continue
 		}
-		WARN("Progress:%s, Count:%d, offset: %d\n", glResp.Progress, glResp.Count, offset)
+		//WARN("Progress:%s, Count:%d, offset: %d\n", glResp.Progress, glResp.Count, offset)
 		offset += glResp.Count
 		if glResp.Count > 0 {
 			//WARN("logs: %v\n", glResp.Logs)
