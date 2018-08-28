@@ -150,7 +150,7 @@ func Writelog(project *sls.LogProject, logstore_name string, logs []*sls.Log) {
 			if strings.Contains(err.Error(), sls.PROJECT_NOT_EXIST) {
 				return
 			} else if strings.Contains(err.Error(), sls.LOGSTORE_NOT_EXIST) {
-				err = project.CreateLogStore(logstore_name, 1, 2)
+				err = project.CreateLogStore(logstore_name, 1, 2, true, 16)
 				if err != nil {
 					WARN("CreateLogStore fail, err: ", err.Error())
 				} else {
@@ -380,7 +380,7 @@ func Getlog(logstore_name string, t uint32, query string) []map[string]string {
 			if strings.Contains(err.Error(), sls.PROJECT_NOT_EXIST) {
 				return list
 			} else if strings.Contains(err.Error(), sls.LOGSTORE_NOT_EXIST) {
-				err = project.CreateLogStore(logstore_name, 1, 2)
+				err = project.CreateLogStore(logstore_name, 1, 2, true, 16)
 				if err != nil {
 					WARN("CreateLogStore fail, err: ", err.Error())
 				} else {
@@ -467,7 +467,7 @@ func Getlogbyday(logstore_name string, day int64, query string) []map[string]str
 			if strings.Contains(err.Error(), sls.PROJECT_NOT_EXIST) {
 				return list
 			} else if strings.Contains(err.Error(), sls.LOGSTORE_NOT_EXIST) {
-				err = project.CreateLogStore(logstore_name, 1, 2)
+				err = project.CreateLogStore(logstore_name, 1, 2, true, 16)
 				if err != nil {
 					WARN("CreateLogStore fail, err: ", err.Error())
 				} else {
